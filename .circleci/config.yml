@@ -79,6 +79,26 @@ commands:
               # Delete backend stack
               aws cloudformation delete-stack --stack-name udapeople-backend-<< parameters.Workflow_ID >>
 jobs:
+  # smoke-test:
+  #   docker: 
+  #     - image: alpine:latest
+  #   steps:
+  #     - run: 
+  #     - run: apk add --update curl
+  #     - run:
+  #         name: smoke test
+  #         command: |
+  #           # Fetch and prepare the BACKEND_IP env var
+  #           BACKEND_IP=""
+  #           API_URL="http://${BACKEND_IP}:3030"
+  #           echo "${API_URL}"
+  #           if curl "${API_URL}/api/status" | grep "ok"
+  #           then
+  #               return 0
+  #           else
+  #               return 1
+  #           fi
+
   configure-infrastructure:
     docker:
       - image: cimg/python:3.10
@@ -129,7 +149,7 @@ jobs:
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
               --output text)
             echo $BACKEND_PUBLIC_IP >> .circleci/ansible/inventory.txt
-            cat .circleci/ansible/inventory.
+            cat .circleci/ansible/inventory.txt
       - persist_to_workspace:
           root: ~/
           paths:
