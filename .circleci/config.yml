@@ -309,6 +309,8 @@ workflows:
           filters:
             branches:
               only: [master]
+      - smoke-test:
+          requires: [deploy-infrastructure]
       - configure-infrastructure:
           requires: [deploy-infrastructure]
       # - run-migrations:
