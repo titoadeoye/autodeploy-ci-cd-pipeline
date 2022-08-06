@@ -59,6 +59,7 @@ commands:
                 npm install
                 npm run migration:revert
               fi
+
     destroy-environment:
       description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
       parameters:
@@ -70,17 +71,18 @@ commands:
             name: Destroy environments
             when: on_fail
             command: |
-              echo "Destroying environment: << parameters.workflow_id >> 
-              
-              # # Empty frontend bucket
-              # aws s3 rm s3://udapeople-<<parameters.Workflow_ID>> --recursive
 
-              # # Delete frontend stack
-              # aws cloudformation delete-stack --stack-name udapeople-frontend-<< parameters.Workflow_ID >>
+              # Empty frontend bucket
+              aws s3 rm s3://udapeople-<<parameters.Workflow_ID>> --recursive
 
-              # # Delete backend stack
-              # aws cloudformation delete-stack --stack-name udapeople-backend-<< parameters.Workflow_ID >>
+              # Delete frontend stack
+              aws cloudformation delete-stack --stack-name udapeople-frontend-<< parameters.Workflow_ID >>
+
+              # Delete backend stack
+              aws cloudformation delete-stack --stack-name udapeople-backend-<< parameters.Workflow_ID >>
+   
 jobs:
+
   smoke-test:
     docker: 
       - image: alpine:latest
@@ -100,6 +102,22 @@ jobs:
               fi
       - destroy-environment
       - revert-migrations
+
+  cloudfront-update:
+    docker:
+       - image: cimg/python:3.10
+    steps:
+      - checkout
+      - install_awscli
+      - run:
+          name: update cloudfront distribution
+          command: |
+            # Change the initial stack name, as applicable to you
+            aws cloudformation deploy \
+            --template-file .circleci/files/cloudfront.yml \
+            --stack-name udapeople-cloudfront \
+            --parameter-overrides WorkflowID="udapeople-${CIRCLE_WORKFLOW_ID:0:7}" \
+            --tags project=udapeople
   configure-infrastructure:
     docker:
       - image: cimg/python:3.10
@@ -316,6 +334,8 @@ workflows:
           requires: [deploy-infrastructure]
       - configure-infrastructure:
           requires: [deploy-infrastructure]
+      - cloudfront-update:
+          requires: [configure-infrastructure]
       # - run-migrations:
       #     requires: [configure-infrastructure]
          
