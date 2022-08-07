@@ -294,7 +294,8 @@ jobs:
           event: pass
           channel: cicd-pipeline
           template: success_tagged_deployment_1
-  deploy_frontend:
+          
+  deploy-frontend:
     docker:
       - image: python:3.10-alpine3.16
     steps:
