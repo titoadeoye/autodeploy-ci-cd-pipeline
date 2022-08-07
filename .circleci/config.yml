@@ -331,12 +331,12 @@ jobs:
 
   deploy-backend:
     docker:
-      - image: cimg/python:3.10
+      - image: python:3.10-alpine3.16
     steps:
       - checkout
-      # - install_awscli
+      - install_awscli
       - install_ansible
-      # - install_nodejs
+      - install_nodejs
       - add_ssh_keys:
           fingerprints: ["40:05:10:5d:69:8b:a8:f1:2a:c8:09:f3:ad:0a:6a:21"]
       - attach_workspace:
