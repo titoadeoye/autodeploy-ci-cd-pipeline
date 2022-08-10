@@ -353,6 +353,7 @@ jobs:
   #     - destroy-environment
   #     - revert-migrations
   
+  # this code is perfect. dont edit it
   deploy-frontend:
     docker:
       - image: cimg/base:stable
@@ -381,6 +382,7 @@ jobs:
           command: |
             cd frontend
             npm run build
+            tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist 2>/dev/null
             aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
       - destroy-environment
       - revert-migrations
