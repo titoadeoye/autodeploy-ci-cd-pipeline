@@ -437,9 +437,10 @@ jobs:
           name: Run migrations
           command: |
             # Get DB host from AWS and add to env
-            export TYPEORM_HOST=$(aws cloudformation list-exports --query "Exports[?Name==\`EndpointAddress-${CIRCLE_WORKFLOW_ID:0:7}\`].Value" --output text)
+            export TYPEORM_HOST=udapeople-db.cvjrsmnv24ig.us-east-1.rds.amazonaws.com
             echo $TYPEORM_HOST
             echo TYPEORM_HOST=$TYPEORM_HOST >> ~/project/backend/.env
+            
             # old
             cd backend 
             npm install
