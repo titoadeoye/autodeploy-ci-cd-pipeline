@@ -13,19 +13,13 @@
   become: yes
   apt:
     autoremove: yes
-- name: install deps
+- name: install dependencies
   become: yes
   apt:
-    name: ['nodejs']
+    name: ["nodejs", "npm"]
     state: latest
     update_cache: yes
-- name: install npm
-  become: yes
-  shell: |
-    sudo apt install libssl1.0-dev
-    sudo apt install nodejs-dev
-    sudo apt install node-gyp
-    sudo apt install npm
+
 - name: install pm2
   become: yes
   npm:
