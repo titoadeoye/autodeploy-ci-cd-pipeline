@@ -216,6 +216,10 @@ jobs:
             cd frontend
             npm install
             npm run build
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - project/frontend
       - save_cache:
           paths: [frontend/node_modules]
           key: frontend-deps
@@ -237,6 +241,10 @@ jobs:
       - save_cache:
           paths: [backend/node_modules]
           key: backend-deps
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - project/backend
       - notify_on_failure        
 
   test-frontend:
@@ -379,31 +387,29 @@ jobs:
   
   deploy-backend:
     docker:
-      - image: cimg/base:stable
+      - image: python:3.10-alpine3.16
     steps:
       - checkout
-      - install_awscli
-      - install_ansible
-      - install_nodejs
       - add_ssh_keys:
-          fingerprints: ["d9:06:93:7c:dd:ac:25:bf:3d:f3:10:f5:5d:69:f6:67"]
+          fingerprints: ["40:05:10:5d:69:8b:a8:f1:2a:c8:09:f3:ad:0a:6a:21"]
       - attach_workspace:
           at: ~/
-      - restore_cache:
-          keys: [backend-deps]
       - run:
           name: Install dependencies
           command: |
-            cd backend
-            npm install
+            apk add --update --no-cache tar gzip nodejs npm aws-cli ansible curl
+      - restore_cache:
+          keys: [backend-deps]
       - run:
           name: Package Backend
           command: |
             cd backend
             npm run build
-            tar -czf artifact.tar.gz dist/* package*
-            cd ..
-            cp backend/artifact.tar.gz .circleci/ansible/roles/deploy/files
+            cd .. 
+            tar -C backend -czvf artifact.tar.gz . 2>/dev/null
+            mkdir -p ~/project/.circleci/ansible/roles/deploy/files/
+            mv artifact.tar.gz .circleci/ansible/roles/deploy/files/artifact.tar.gz
+            cp ~/project/backend/.env .circleci/ansible/roles/deploy/files/backend.env
       - run:
           name: Deploy backend
           command: |
