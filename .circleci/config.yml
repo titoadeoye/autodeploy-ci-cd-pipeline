@@ -436,6 +436,11 @@ jobs:
       - run:
           name: Run migrations
           command: |
+            # Get DB host from AWS and add to env
+            export TYPEORM_HOST=$(aws cloudformation list-exports --query "Exports[?Name==\`EndpointAddress-${CIRCLE_WORKFLOW_ID:0:7}\`].Value" --output text)
+            echo $TYPEORM_HOST
+            echo TYPEORM_HOST=$TYPEORM_HOST >> ~/project/backend/.env
+            # old
             cd backend
             npm install
             npm run migrations > migrations_dump.txt
@@ -450,7 +455,7 @@ jobs:
               echo "No migrations are pending" 
             fi
       - destroy-environment
-      - revert-migrations
+      - revert-migrations 
   cleanup:
     docker:
       - image: cimg/base:stable
