@@ -174,7 +174,8 @@ jobs:
             
             cd .circleci/ansible
             cat inventory.txt
-            ansible-playbook -i inventory.txt configure-server.yml
+            ansible-playbook -i inventory.txt configure-server.yml \
+            --key-file ~/.ssh/id_rsa_4005105d698ba8f12ac809f3ad0a6a21 -vvvv
       - persist_to_workspace:
           root: ~/
           paths:
@@ -434,7 +435,9 @@ jobs:
             export TYPEORM_MIGRATIONS=./migrations/*.ts
             cd .circleci/ansible
             cat inventory.txt
-            ansible-playbook -i inventory.txt deploy-backend.yml
+            ansible-playbook -i inventory.txt deploy-backend.yml \
+            --key-file ~/.ssh/id_rsa_4005105d698ba8f12ac809f3ad0a6a21 -vvvv
+
       - destroy-environment
       - revert-migrations
 
