@@ -1,56 +1,47 @@
 ---
-- name: Get TYPEORM into env
-  become: yes
-  shell: |
-    echo 'export TYPEORM_HOST=$(grep "TYPEORM_HOST" /home/ubuntu/.env | cut -d"=" -f2)' >> ~/.bashrc
-- name: 'update and upgrade packages.'
-  become: yes
-  apt:
-    upgrade: yes
-    update_cache: yes
-    cache_valid_time: 86400
-- name: remove unneeded deps
-  become: yes
-  apt:
-    autoremove: yes
-- name: install dependencies
-  become: yes
-  apt:
-    name: ["nodejs", "npm"]
-    state: latest
-    update_cache: yes
+  - name: "show remote environment"
+    shell: env
 
-- name: install pm2
-  become: yes
-  npm:
-    name: pm2 
-    global: yes
-    state: latest
-    production: yes
-- name: extract artifact
-  become: yes
-  unarchive:
-    src: files/artifact.tar.gz
-    dest: .
-- name: start app
-  become: yes
-  shell: |
-    npm run migrations
-    pm2 delete all
-    export $(grep TYPEORM_HOST /home/ubuntu/.env) && pm2 start npm -- start
+  # - name: install rsync on the ansible controller
+  #   become: yes
+  #   connection: local
+  #   package:
+  #     name: rsync
+  #     state: present
+  
 
-- name: check env vars
-  shell: cat /home/ubuntu/.env
-  register: myecho
-- name: check pm2 log
-  become: yes
-  shell: pm2 logs --nostream
-  register: pm2Log
-- name: Debug command
-  debug:
-    var: myecho
-    verbosity: 2
-- name: Show PM2 log
-  debug:
-    var: pm2Log
-    verbosity: 2
+  - name: "copy backend binaries"
+    become: yes
+    synchronize:
+      src: ../../backend/dist
+      dest: /home/ubuntu/uda_app
+      recursive: true
+
+  - name: "copy node_modules"
+    become: yes
+    synchronize:
+      src: ../../backend/node_modules
+      dest: /home/ubuntu/uda_app
+      recursive: true
+
+  - name: "delete anything that might already be running"
+    become: true
+    command: pm2 delete all
+    ignore_errors: true
+
+  - name: "start server"
+    become: true
+    command: pm2 start -f ./main.js
+    args:
+      chdir: /home/ubuntu/uda_app/dist
+    environment:
+     ENVIRONMENT: production
+     TYPEORM_CONNECTION: "{{ lookup('env', 'TYPEORM_CONNECTION') }}"
+     TYPEORM_MIGRATIONS_DIR: "./migrations"
+     TYPEORM_MIGRATIONS: "./migrations/*.js"
+     TYPEORM_ENTITIES: "./modules/domain/**/*.entity.js"
+     TYPEORM_HOST: "{{ lookup('env', 'TYPEORM_HOST') }}"
+     TYPEORM_PORT: "{{ lookup('env', 'TYPEORM_PORT') }}"
+     TYPEORM_USERNAME: "{{ lookup('env', 'TYPEORM_USERNAME') }}"
+     TYPEORM_PASSWORD: "{{ lookup('env', 'TYPEORM_PASSWORD') }}"
+     TYPEORM_DATABASE: "{{ lookup('env', 'TYPEORM_DATABASE') }}"
