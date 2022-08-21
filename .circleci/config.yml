@@ -2,7 +2,7 @@ version: 2.1
 # version of pipeline
 orbs: 
     slack: circleci/slack@4.10.1
-    
+
 commands:  
   notify_on_failure:
     steps:
@@ -61,7 +61,7 @@ jobs:
       - restore_cache:
           keys: [frontend-build]
       - run:
-          name: Build front-end
+          name: Build frontend
           command: |
             cd frontend
             npm install
