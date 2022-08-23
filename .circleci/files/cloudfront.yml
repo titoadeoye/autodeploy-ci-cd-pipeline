@@ -5,26 +5,27 @@ Parameters:
   WorkflowID:
     Description: Unique identifier.
     Type: String
-    Default: "1"
+    Default: ""
   WorkflowID2:
     Description: Unique identifier.
     Type: String
-    Default: 2
+    Default: ""
+
 
 Resources:
   
-  CloudFrontOriginAccessIdentity:
+  CloudFrontOriginAccessIdentityOne:
     Type: "AWS::CloudFront::CloudFrontOriginAccessIdentity"
     Properties:
       CloudFrontOriginAccessIdentityConfig:
         Comment: Origin Access Identity for Serverless Static Website
 
-  WebpageCDN1:
+  WebpageCDNone:
     Type: AWS::CloudFront::Distribution
     Properties:
       DistributionConfig:
         Origins:
-          - DomainName: !Sub "udapeople-blue${WorkflowID}.s3.amazonaws.com"
+          - DomainName: !Sub "udapeople-${WorkflowID}.s3.amazonaws.com"
             Id: webpage
             S3OriginConfig:
               OriginAccessIdentity: !Sub "origin-access-identity/cloudfront/${CloudFrontOriginAccessIdentity}"
@@ -35,7 +36,14 @@ Resources:
             QueryString: False
           TargetOriginId: webpage
           ViewerProtocolPolicy: allow-all
-   WebpageCDN2:
+          
+  CloudFrontOriginAccessIdentityTwo:
+    Type: "AWS::CloudFront::CloudFrontOriginAccessIdentity"
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: Origin Access Identity for Serverless Static Website
+
+  WebpageCDNTwo:
     Type: AWS::CloudFront::Distribution
     Properties:
       DistributionConfig:
@@ -53,13 +61,13 @@ Resources:
           ViewerProtocolPolicy: allow-all
 
 Outputs:
-  WorkflowID:
+  WorkflowID1:
     Value: !Sub ${WorkflowID}
-    Description: URL for website hosted on S3 no 1
+    Description: URL for website hosted on S3
     Export:
-      Name: WorkflowID2
+      Name: WorkflowID
   WorkflowID2:
     Value: !Sub ${WorkflowID2}
-    Description: URL for website hosted on S3 no 2
+    Description: URL for website hosted on S3
     Export:
       Name: WorkflowID2
