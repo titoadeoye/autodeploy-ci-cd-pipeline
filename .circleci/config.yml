@@ -272,6 +272,7 @@ jobs:
             npm install
             npm run build
             tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
+            aws s3 cp dist s3://udapeoplefrontend123456 --recursive
             aws s3 cp dist s3://udapeoplefrontend${CIRCLE_WORKFLOW_ID:0:7} --recursive
       - destroy-environment:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}   
@@ -364,7 +365,7 @@ jobs:
     docker:
       - image: amazon/aws-cli
     steps:
-      - checkout
+      - checkout 
       - run:
           name: Install dependencies
           command: |
@@ -377,7 +378,7 @@ jobs:
             aws cloudformation deploy \
               --template-file .circleci/files/cloudfront.yml \
               --stack-name udapeople-cloudfront \
-              --parameter-overrides WorkflowID2="udapeople-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --parameter-overrides WorkflowID="udapeople-${CIRCLE_WORKFLOW_ID:0:7}" \
               --tags project=udapeople
       - revert-migrations:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}  
@@ -412,52 +413,36 @@ jobs:
               fi
 
 
-  blue-frontend:
-    docker:
-      - image:  circleci/node:13.8.0
-    steps:
-      - checkout
-      - attach_workspace:
-          at: ~/.circleci/ansible/inventory.txt
-      - run:
-          name: Install dependencies
-          command: |
-            sudo apt-get update && sudo apt-get install -yy less
-            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-            unzip awscliv2.zip
-            sudo ./aws/install
-      - run:
-          name: Initialise cloudfront
-          command: |
-            aws cloudformation deploy \
-              --template-file .circleci/files/cloudfront.yml \
-              --tags project=udapeople \
-              --stack-name udapeople-cloudfront \
-              --parameter-overrides WorkflowID=123456
-      - run:
-          name: deploy blue initial bucket
-          command: |
-            aws cloudformation deploy \
-              --template-file .circleci/files/frontend.yml \
-              --tags project=udapeople-frontend-123456 \
-              --stack-name udapeople-frontend-123456 \
-              --parameter-overrides ID=123456
-      - run:
-          name: get frontend objects and add to blue bucket
-          command: |
-            cd frontend
-            npm install
-            npm run build
-            tar -czvf artifact-123456.tar.gz dist
-            aws s3 cp dist s3://udapeoplefrontend123456 --recursive
-      - run:
-          name: deploy blue backend
-          command: |
-            aws cloudformation deploy \
-              --template-file .circleci/files/backend.yml \
-              --tags project=udapeople-backend-123456 \
-              --stack-name udapeople-backend-123456 \
-              --parameter-overrides ID=123456
+  # blue-frontend:
+  #   docker:
+  #     - image:  circleci/node:13.8.0
+  #   steps:
+  #     - checkout
+  #     - attach_workspace:
+  #         at: ~/.circleci/ansible/inventory.txt
+  #     - run:
+  #         name: Install dependencies
+  #         command: |
+  #           sudo apt-get update && sudo apt-get install -yy less
+  #           curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+  #           unzip awscliv2.zip
+  #           sudo ./aws/install
+  #     - run:
+  #         name: get frontend objects and add to blue bucket
+  #         command: |
+  #           cd frontend
+  #           npm install
+  #           npm run build
+  #           tar -czvf artifact-123456.tar.gz dist
+  #           aws s3 cp dist s3://udapeoplefrontend123456 --recursive
+      # - run:
+      #     name: deploy blue backend
+      #     command: |
+      #       aws cloudformation deploy \
+      #         --template-file .circleci/files/backend.yml\
+      #         --tags project=udapeople-backend-123456 \
+      #         --stack-name udapeople-backend-123456 \
+      #         --parameter-overrides ID=123456
 
       
       
@@ -485,15 +470,13 @@ workflows:
           requires: [deploy-infrastructure]
       - run-migrations:
           requires: [configure-infrastructure]
-      - blue-frontend:
-          requires: [run-migrations]
       - deploy-frontend:
           requires: [run-migrations]
       - deploy-backend:
           requires: [run-migrations]
       - smoke-test:
           requires: [deploy-backend, deploy-frontend]
-      - cloudfront-update:
-          requires: [smoke-test]
       - cleanup:
-          requires: [cloudfront-update]
+          requires: [smoke-test]
+      - cloudfront-update:
+          requires: [cleanup]
