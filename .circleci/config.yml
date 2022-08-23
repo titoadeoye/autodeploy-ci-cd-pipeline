@@ -393,7 +393,9 @@ jobs:
               export OldWorkflowID=$(aws cloudformation \
                 list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
                 --no-paginate --output text)
-              echo OldWorkflowID: "${OldWorkflowID}"
+              export OldWorkflow_ID=4d755c3
+              echo OldWorkflowID: "${OldWorkflow_ID}"
+              # echo OldWorkflowID: "${OldWorkflowID}"
               echo CIRCLE_WORKFLOW_ID "${CIRCLE_WORKFLOW_ID:0:7}"
               export STACKS=($(aws cloudformation list-stacks --query "StackSummaries[*].StackName" \
                 --stack-status-filter CREATE_COMPLETE --no-paginate --output text)) 
@@ -401,13 +403,13 @@ jobs:
         - run:
             name: Remove old stacks and files
             command: |
-              if [[ "$CurrentWorkflowID" != "$OldWorkflowID" ]]
+              if [[ "$CurrentWorkflowID" != "$OldWorkflow_ID" ]]
               then
-                aws s3 rm "s3://udapeoplefrontend${OldWorkflowID}" --recursive
-                aws cloudformation delete-stack --stack-name "udapeople-backend-${OldWorkflowID}"
-                aws cloudformation delete-stack --stack-name "udapeople-frontend-${OldWorkflowID}"
+                aws s3 rm "s3://udapeoplefrontend${OldWorkflow_ID}" --recursive
+                aws cloudformation delete-stack --stack-name "udapeople-backend-${OldWorkflow_ID}"
+                aws cloudformation delete-stack --stack-name "udapeople-frontend-${OldWorkflow_ID}"
               else
-                echo "$OldWorkflowID==$CurrentWorkflowID => nothing left to do..."
+                echo "cannot delete stacks"
               fi
             
 
