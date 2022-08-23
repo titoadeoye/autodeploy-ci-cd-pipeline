@@ -374,20 +374,23 @@ jobs:
       - run:
           name: Update cloudfront distribution
           command: |
-            # your code here
             export OldWorkflowID=$(aws cloudformation list-exports \
-            --query "Exports[?Name==\`Cloudfront-${CIRCLE_WORKFLOW_ID:0:7}\`].Value" \
-            --no-paginate --output text) 
+              --query "Exports[?Name==\`WorkflowID\`].Value" \
+              --no-paginate --output text)
             echo $OldWorkflowID >> ~/OldWorkflowID.txt
             cat ~/OldWorkflowID.txt
-            # Change the initial stack name, as applicable to you
+
+            #push new cloudfront distribution
             aws cloudformation deploy \
-            --template-file .circleci/files/cloudfront.yml \
-            --stack-name cloudfront-${CIRCLE_WORKFLOW_ID:0:7} \
-            --parameter-overrides WorkflowID=${CIRCLE_WORKFLOW_ID:0:7} \
-            --tags project=udapeople
-            echo OldWorkflowID=${OldWorkflowID}
-            echo Current Workflow ID: ${CIRCLE_WORKFLOW_ID:0:7}
+              --template-file .circleci/files/cloudfront.yml \
+              --stack-name udapeople-cloudfront \
+              --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
+              --tags project=udapeople
+
+            #print workflow ids, both current and old
+            echo OldWorkflowID="${OldWorkflowID}"
+            echo Current_Workflow_Id="${CIRCLE_WORKFLOW_ID:0:7}"
+
       - revert-migrations:
           workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}  
 
@@ -397,23 +400,40 @@ jobs:
       steps:
         - checkout
         - run:
-            name: Get old stack workflow id and remove old stack and files
+            name: Get old stack workflow id
             command: |
-              export OldWorkflowID=$(aws cloudformation list-exports \
-                --query "Exports[?Name==\`Cloudfront-${CIRCLE_WORKFLOW_ID:0:7}\`].Value" \
+              export OldWorkflowID=$(aws cloudformation \
+                list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
                 --no-paginate --output text)
-              echo OldWorkflowID=$OldWorkflowID
-              export STACKS=$(aws cloudformation list-stacks \
-                --query "StackSummaries[*].StackName" \
-                --stack-status-filter CREATE_COMPLETE --no-paginate --output text)
-              echo $STACKS
-              if [[ "${STACKS[@]}" =~ "${OldWorkflowID}" ]]
+              echo $OldWorkflowID >> ~/OldWorkflowID.txt
+              cat ~/OldWorkflowID.txt
+
+              echo OldWorkflowID: "${OldWorkflowID}"
+              echo Current_Workflow_Id="${CIRCLE_WORKFLOW_ID:0:7}"
+              # echo OldWorkflowID: "${OldWorkflowID}"
+
+              #print stack names
+              export STACKS=($(aws cloudformation list-stacks --query "StackSummaries[*].StackName" \
+                --stack-status-filter CREATE_COMPLETE --no-paginate --output text)) 
+              echo Stack names: "${STACKS[@]}"
+        - run:
+            name: Remove old stacks and files
+            command: |
+              # echo $OldWorkflowID >> ~/OldWorkflowID.txt
+              cat ~/OldWorkflowID.txt
+
+              OldWorkflowID=${cat ~/OldWorkflowID.txt}
+              echo OldWorkflowID= "${OldWorkflowID}"
+              echo $OldWorkflowID
+
+              if [[ "${CIRCLE_WORKFLOW_ID:0:7}" =~ "${OldWorkflowID}" ]]
               then
-                aws s3 rm "s3://udapeople-${OldWorkflowID}" --recursive
+              echo -----deleting stacks-----------
+                aws s3 rm "s3://udapeoplefrontend${OldWorkflowID}" --recursive
                 aws cloudformation delete-stack --stack-name "udapeople-backend-${OldWorkflowID}"
                 aws cloudformation delete-stack --stack-name "udapeople-frontend-${OldWorkflowID}"
               else
-                echo  Cannot cleanup stacks
+                echo "cannot delete stacks"
               fi
             
 
