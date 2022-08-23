@@ -5,10 +5,11 @@ Parameters:
   WorkflowID:
     Description: Unique identifier.
     Type: String
+    Default: "1"
   WorkflowID2:
     Description: Unique identifier.
     Type: String
-
+    Default: 2
 
 Resources:
   
