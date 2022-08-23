@@ -377,7 +377,7 @@ jobs:
             # your code here
             export OldWorkflowID=$(aws cloudformation list-exports \
             --query "Exports[?Name==\`Cloudfront-${CIRCLE_WORKFLOW_ID:0:7}\`].Value" \
-            --no-paginate --output text)
+            --no-paginate --output text) 
             echo $OldWorkflowID >> ~/OldWorkflowID.txt
             cat ~/OldWorkflowID.txt
             # Change the initial stack name, as applicable to you
